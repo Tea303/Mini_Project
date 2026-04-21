@@ -11,6 +11,7 @@ class BPlusTree {
 private:
     Node* root;
     int max_capacity;
+    std::vector<std::string> headers;
 
     // Traverses down to the correct leaf while recording the ancestry for upward propagation
     LeafNode* findLeaf(const std::string& key, std::vector<Node*>& path) {
@@ -168,6 +169,9 @@ public:
             rightNode = newInternal;
         }
     }
+
+    void setHeaders(const std::vector<std::string>& h) { headers = h; }
+    const std::vector<std::string>& getHeaders() const { return headers; }
 };
 
 #endif // BPLUS_TREE_H

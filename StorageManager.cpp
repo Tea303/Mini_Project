@@ -13,6 +13,12 @@ void StorageManager::saveIndex(BPlusTree& tree, const std::string& csv_filename)
     std::string db_filename = formatFilename(csv_filename);
     std::ofstream out(db_filename, std::ios::trunc);
 
+    out << "HEADER|"; 
+    for (size_t i = 0; i < tree.getHeaders().size(); ++i) {
+        out << tree.getHeaders()[i] << (i < tree.getHeaders().size() - 1 ? "," : "");
+    }
+    out << "\n";
+
     if (!out.is_open()) {
         std::cerr << "Error: Could not open " << db_filename << " for writing.\n";
         return;
@@ -46,6 +52,14 @@ BPlusTree* StorageManager::loadIndex(const std::string& dataset_name, int capaci
 
     BPlusTree* tree = new BPlusTree(capacity);
     std::string line;
+    std::string line;
+
+    if (std::getline(in, line)) {
+        if (line.substr(0, 7) == "HEADER|") {
+            std::string header_str = line.substr(7);
+            tree->setHeaders(CSVParser::parseLine(header_str));
+        }
+    }
     
     while (std::getline(in, line)) {
         size_t delim_pos = line.find("|");

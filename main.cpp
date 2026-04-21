@@ -81,7 +81,8 @@ int main() {
                     } else {
                         // Structured Table Output for better readability
                         std::vector<std::string> fields = CSVParser::parseLine(result[0]);
-                        
+                        const std::vector<std::string>& headers = tree->getHeaders();
+
                         std::cout << "\n+------------+------------------------------------------------------+\n";
                         std::cout << "| SEARCH     | Result for: " << std::left << std::setw(41) << key_value << "|\n";
                         std::cout << "+------------+------------------------------------------------------+\n";
@@ -89,8 +90,11 @@ int main() {
                         std::cout << "+------------+------------------------------------------------------+\n";
                         
                         for (size_t i = 0; i < fields.size(); ++i) {
-                            std::cout << "| Field " << std::setw(4) << std::right << i << " | " 
-                                      << std::left << std::setw(52) << fields[i] << " |\n";
+                            // If headers exist, use them; otherwise, fall back to "Field i"
+                            std::string label = (i < headers.size()) ? headers[i] : "Field " + std::to_string(i);
+                            
+                            std::cout << "| " << std::left << std::setw(10) << label << " | " 
+                                    << std::left << std::setw(52) << fields[i] << " |\n";
                         }
                         
                         std::cout << "+------------+------------------------------------------------------+\n\n";
