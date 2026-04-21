@@ -88,25 +88,25 @@ int main() {
                     if (result.empty()) {
                         std::cout << "Error: Key '" << key_value << "' not found.\n";
                     } else {
-                        // Structured Table Output for better readability
                         std::vector<std::string> fields = CSVParser::parseLine(result[0]);
                         const std::vector<std::string>& headers = tree->getHeaders();
 
-                        std::cout << "\n+------------+------------------------------------------------------+\n";
-                        std::cout << "| SEARCH     | Result for: " << std::left << std::setw(41) << key_value << "|\n";
-                        std::cout << "+------------+------------------------------------------------------+\n";
-                        std::cout << "| COLUMN ID  | FIELD VALUE                                          |\n";
-                        std::cout << "+------------+------------------------------------------------------+\n";
+                        // Borders updated to match the new width (30 for ID + 50 for Value)
+                        std::cout << "\n+--------------------------------+----------------------------------------------------+\n";
+                        std::cout << "| SEARCH                         | Result for: " << std::left << std::setw(39) << key_value << "|\n";
+                        std::cout << "+--------------------------------+----------------------------------------------------+\n";
+                        std::cout << "| CATEGORY NAME                  | FIELD VALUE                                        |\n";
+                        std::cout << "+--------------------------------+----------------------------------------------------+\n";
                         
                         for (size_t i = 0; i < fields.size(); ++i) {
-                            // If headers exist, use them; otherwise, fall back to "Field i"
                             std::string label = (i < headers.size()) ? headers[i] : "Field " + std::to_string(i);
                             
-                            std::cout << "| " << std::left << std::setw(10) << label << " | " 
-                                    << std::left << std::setw(52) << fields[i] << " |\n";
+                            // Changed setw(10) to setw(30) for roughly 2x-3x the space
+                            std::cout << "| " << std::left << std::setw(30) << label << " | " 
+                                    << std::left << std::setw(50) << fields[i] << " |\n";
                         }
                         
-                        std::cout << "+------------+------------------------------------------------------+\n\n";
+                        std::cout << "+--------------------------------+----------------------------------------------------+\n\n";
                     }
                     delete tree; 
                 } catch (const std::exception& e) {
