@@ -42,6 +42,10 @@ std::vector<std::string> CSVParser::parseLine(const std::string& line) {
     
     for (size_t i = 0; i < line.length(); ++i) {
         char c = line[i];
+        
+        // Skip carriage return characters (\r) that often appear in Windows-saved CSVs
+        if (c == '\r') continue;
+
         if (c == '\"') {
             in_quotes = !in_quotes; 
         } else if (c == ',' && !in_quotes) {
@@ -51,6 +55,15 @@ std::vector<std::string> CSVParser::parseLine(const std::string& line) {
             current_cell += c;
         }
     }
+    
+    // Final cleanup of the last cell to remove any trailing newline or whitespace
+    if (!current_cell.empty()) {
+        size_t last = current_cell.find_last_not_of(" \n\r\t");
+        if (last != std::string::npos) {
+            current_cell = current_cell.substr(0, last + 1);
+        }
+    }
+    
     result.push_back(current_cell);
     return result;
 }
