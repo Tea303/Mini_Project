@@ -53,13 +53,22 @@ int main() {
         } 
         else if (command == "UPLOAD") {
             std::string filename, primary_col;
-            if (ss >> filename >> primary_col) {
+            // First, extract the filename (one word)
+            if (ss >> filename) {
+                // Then, capture the rest of the line as the column name
+                std::getline(ss >> std::ws, primary_col); 
+                
+                if (primary_col.empty()) {
+                    std::cerr << "Usage Error: UPLOAD <filename.csv> <PRIMARY_COL>\n";
+                    continue;
+                }
+
                 std::vector<std::vector<std::string>> valid_records;
                 int pk_index = -1;
 
                 if (CSVParser::validateAndParse(filename, primary_col, valid_records, pk_index)) {
                     BPlusTree tree(4);
-
+                    
                     std::ifstream file(filename);
                     std::string header_line;
                     if (std::getline(file, header_line)) {
@@ -67,53 +76,39 @@ int main() {
                     }
                     file.close();
 
-                    std::cout << "Indexing " << valid_records.size() << " records...\n";
+                    std::cout << "Indexing " << valid_records.size() << " records using [" << primary_col << "]...\n";
                     for (const auto& record : valid_records) {
                         tree.insert(record[pk_index], record); 
                     }
                     StorageManager::saveIndex(tree, filename);
                 }
-            } else {
-                std::cerr << "Usage Error: UPLOAD <filename.csv> <PRIMARY_COL>\n";
             }
-        } 
+        }
         else if (command == "FIND") {
             std::string csv_name, key_value;
-            if (ss >> csv_name >> key_value) {
+            // First, extract the dataset name (one word)
+            if (ss >> csv_name) {
+                // Then, capture the rest of the line as the search key (supports spaces)
+                std::getline(ss >> std::ws, key_value);
+
+                if (key_value.empty()) {
+                    std::cerr << "Usage Error: FIND <csv_name> <key_value>\n";
+                    continue;
+                }
+
                 try {
-                    // Load the index file from disk as required 
                     BPlusTree* tree = StorageManager::loadIndex(csv_name, 4);
                     std::vector<std::string> result = tree->find(key_value);
                     
                     if (result.empty()) {
                         std::cout << "Error: Key '" << key_value << "' not found.\n";
                     } else {
-                        std::vector<std::string> fields = CSVParser::parseLine(result[0]);
-                        const std::vector<std::string>& headers = tree->getHeaders();
-
-                        // Borders updated to match the new width (30 for ID + 50 for Value)
-                        std::cout << "\n+--------------------------------+----------------------------------------------------+\n";
-                        std::cout << "| SEARCH                         | Result for: " << std::left << std::setw(39) << key_value << "|\n";
-                        std::cout << "+--------------------------------+----------------------------------------------------+\n";
-                        std::cout << "| CATEGORY NAME                  | FIELD VALUE                                        |\n";
-                        std::cout << "+--------------------------------+----------------------------------------------------+\n";
-                        
-                        for (size_t i = 0; i < fields.size(); ++i) {
-                            std::string label = (i < headers.size()) ? headers[i] : "Field " + std::to_string(i);
-                            
-                            // Changed setw(10) to setw(30) for roughly 2x-3x the space
-                            std::cout << "| " << std::left << std::setw(30) << label << " | " 
-                                    << std::left << std::setw(50) << fields[i] << " |\n";
-                        }
-                        
-                        std::cout << "+--------------------------------+----------------------------------------------------+\n\n";
+                        // ... (keep your structured table display logic here) ...
                     }
                     delete tree; 
                 } catch (const std::exception& e) {
                     std::cerr << "Error: " << e.what() << "\n";
                 }
-            } else {
-                std::cerr << "Usage Error: FIND <csv_name> <key_value>\n";
             }
         } 
         else {
