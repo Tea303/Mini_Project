@@ -53,7 +53,6 @@ BPlusTree* StorageManager::loadIndex(const std::string& dataset_name, int capaci
 
     BPlusTree* tree = new BPlusTree(capacity);
     std::string line;
-    std::string line;
 
     if (std::getline(in, line)) {
         if (line.substr(0, 7) == "HEADER|") {
