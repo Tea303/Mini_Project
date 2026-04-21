@@ -3,7 +3,7 @@
 #include <sstream>
 #include <vector>
 #include <stdexcept>
-#include <iomanip> // Required for formatting the table output
+#include <iomanip>
 #include <fstream>
 
 #include "BPlusTree.h"
@@ -20,7 +20,10 @@ void printHelp() {
 }
 
 int main() {
-    std::string input_line;
+    std::string inputLine;
+    BPlusTree* activeTree = nullptr;
+    std::string currentDataset = "";
+
     std::cout << "===============================================\n";
     std::cout << "        B+ Tree REPL Query Engine              \n";
     std::cout << "===============================================\n";
@@ -28,9 +31,9 @@ int main() {
 
     while (true) {
         std::cout << "> ";
-        if (!std::getline(std::cin, input_line)) break;
+        if (!std::getline(std::cin, inputLine)) break;
 
-        std::stringstream ss(input_line);
+        std::stringstream ss(inputLine);
         std::string command;
         ss >> command;
 
@@ -52,80 +55,118 @@ int main() {
             }
         } 
         else if (command == "UPLOAD") {
-            std::string filename, primary_col;
-            // First, extract the filename (one word)
+            std::string filename, primaryCol;
             if (ss >> filename) {
-                // Then, capture the rest of the line as the column name
-                std::getline(ss >> std::ws, primary_col); 
+                std::getline(ss >> std::ws, primaryCol); 
                 
-                if (primary_col.empty()) {
+                if (primaryCol.empty()) {
                     std::cerr << "Usage Error: UPLOAD <filename.csv> <PRIMARY_COL>\n";
                     continue;
                 }
 
-                std::vector<std::vector<std::string>> valid_records;
-                int pk_index = -1;
+                std::vector<std::vector<std::string>> validRecords;
+                int pkIndex = -1;
 
-                if (CSVParser::validateAndParse(filename, primary_col, valid_records, pk_index)) {
+                if (CSVParser::validateAndParse(filename, primaryCol, validRecords, pkIndex)) {
                     BPlusTree tree(4);
                     
                     std::ifstream file(filename);
-                    std::string header_line;
-                    if (std::getline(file, header_line)) {
-                        tree.setHeaders(CSVParser::parseLine(header_line));
+                    std::string headerLine;
+                    if (std::getline(file, headerLine)) {
+                        tree.setHeaders(CSVParser::parseLine(headerLine));
                     }
                     file.close();
 
-                    std::cout << "Indexing " << valid_records.size() << " records using [" << primary_col << "]...\n";
-                    for (const auto& record : valid_records) {
-                        tree.insert(record[pk_index], record); 
+                    std::cout << "Indexing " << validRecords.size() << " records using [" << primaryCol << "]...\n";
+                    for (const auto& record : validRecords) {
+                        tree.insert(record[pkIndex], record); 
                     }
+                    
                     StorageManager::saveIndex(tree, filename);
+                    
+                    if (activeTree) {
+                        delete activeTree;
+                        activeTree = nullptr;
+                        currentDataset = "";
+                    }
                 }
+            } else {
+                std::cerr << "Usage Error: UPLOAD <filename.csv> <PRIMARY_COL>\n";
             }
-        }
+        } 
         else if (command == "FIND") {
-            std::string csv_name, key_value;
-            
-            // 1. Get the dataset name (e.g., "amazon")
-            if (!(ss >> csv_name)) {
-                std::cerr << "Usage Error: FIND <csv_name> <key_value>\n";
-                continue;
-            }
+            std::string csvName, keyValue;
+            if (ss >> csvName) {
+                std::getline(ss >> std::ws, keyValue);
 
-            // 2. Capture EVERYTHING else on the line as the key
-            std::getline(ss >> std::ws, key_value);
-
-            // 3. Clean up the key (remove any trailing \r or \n)
-            if (!key_value.empty()) {
-                size_t last = key_value.find_last_not_of(" \n\r\t");
-                if (last != std::string::npos) key_value = key_value.substr(0, last + 1);
-            }
-
-            if (key_value.empty()) {
-                std::cerr << "Usage Error: Missing key value.\n";
-                continue;
-            }
-
-            try {
-                // Use csv_name directly. If you typed "amazon.csv", 
-                // formatFilename handles stripping the ".csv"
-                BPlusTree* tree = StorageManager::loadIndex(csv_name, 4);
-                std::vector<std::string> result = tree->find(key_value);
-                
-                if (result.empty()) {
-                    std::cout << "Error: Key [" << key_value << "] not found.\n";
-                } else {
-                    // ... (Your table display logic) ...
+                if (!keyValue.empty()) {
+                    size_t last = keyValue.find_last_not_of(" \n\r\t");
+                    if (last != std::string::npos) {
+                        keyValue = keyValue.substr(0, last + 1);
+                    }
                 }
-                delete tree;
-            } catch (const std::exception& e) {
-                std::cerr << "Engine Error: " << e.what() << "\n";
+
+                if (keyValue.empty()) {
+                    std::cerr << "Usage Error: FIND <csv_name> <key_value>\n";
+                    continue;
+                }
+
+                try {
+                    if (activeTree == nullptr || csvName != currentDataset) {
+                        std::cout << "Loading index [" << csvName << "] into memory... (Please wait)\n";
+                        if (activeTree) delete activeTree;
+                        
+                        activeTree = StorageManager::loadIndex(csvName, 4);
+                        currentDataset = csvName;
+                        std::cout << "Index loaded successfully.\n";
+                    }
+
+                    std::vector<std::string> result = activeTree->find(keyValue);
+                    
+                    if (result.empty()) {
+                        std::cout << "Error: Key [" << keyValue << "] not found.\n";
+                    } else {
+                        std::vector<std::string> fields;
+                        std::stringstream rss(result[0]);
+                        std::string segment;
+                        while (std::getline(rss, segment, '\t')) {
+                            fields.push_back(segment);
+                        }
+
+                        const std::vector<std::string>& headers = activeTree->getHeaders();
+
+                        std::cout << "\n+--------------------------------+----------------------------------------------------+\n";
+                        std::cout << "| SEARCH                         | Result for: " << std::left << std::setw(39) << keyValue << "|\n";
+                        std::cout << "+--------------------------------+----------------------------------------------------+\n";
+                        std::cout << "| CATEGORY NAME                  | FIELD VALUE                                        |\n";
+                        std::cout << "+--------------------------------+----------------------------------------------------+\n";
+                        
+                        for (size_t i = 0; i < fields.size(); ++i) {
+                            std::string label = (i < headers.size()) ? headers[i] : "Field " + std::to_string(i);
+                            
+                            std::cout << "| " << std::left << std::setw(30) << label << " | " 
+                                      << std::left << std::setw(50) << fields[i] << " |\n";
+                        }
+                        
+                        std::cout << "+--------------------------------+----------------------------------------------------+\n\n";
+                    }
+                } catch (const std::exception& e) {
+                    std::cerr << "Engine Error: " << e.what() << "\n";
+                    activeTree = nullptr;
+                    currentDataset = "";
+                }
+            } else {
+                std::cerr << "Usage Error: FIND <csv_name> <key_value>\n";
             }
-        }
+        } 
         else {
             std::cerr << "Unrecognized command. Type HELP for syntax.\n";
         }
     }
+
+    if (activeTree) {
+        delete activeTree;
+    }
+
     return 0;
 }
