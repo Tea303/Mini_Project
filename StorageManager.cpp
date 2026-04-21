@@ -1,4 +1,5 @@
 #include "StorageManager.h"
+#include "CSVParser.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -60,7 +61,7 @@ BPlusTree* StorageManager::loadIndex(const std::string& dataset_name, int capaci
             tree->setHeaders(CSVParser::parseLine(header_str));
         }
     }
-    
+
     while (std::getline(in, line)) {
         size_t delim_pos = line.find("|");
         if (delim_pos != std::string::npos) {
