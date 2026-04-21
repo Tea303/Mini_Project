@@ -4,6 +4,7 @@
 #include <vector>
 #include <stdexcept>
 #include <iomanip> // Required for formatting the table output
+#include <fstream>
 
 #include "BPlusTree.h"
 #include "CSVParser.h"
@@ -58,6 +59,14 @@ int main() {
 
                 if (CSVParser::validateAndParse(filename, primary_col, valid_records, pk_index)) {
                     BPlusTree tree(4);
+
+                    std::ifstream file(filename);
+                    std::string header_line;
+                    if (std::getline(file, header_line)) {
+                        tree.setHeaders(CSVParser::parseLine(header_line));
+                    }
+                    file.close();
+
                     std::cout << "Indexing " << valid_records.size() << " records...\n";
                     for (const auto& record : valid_records) {
                         tree.insert(record[pk_index], record); 

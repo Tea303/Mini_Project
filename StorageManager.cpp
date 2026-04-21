@@ -14,16 +14,16 @@ void StorageManager::saveIndex(BPlusTree& tree, const std::string& csv_filename)
     std::string db_filename = formatFilename(csv_filename);
     std::ofstream out(db_filename, std::ios::trunc);
 
+    if (!out.is_open()) {
+        std::cerr << "Error: Could not open " << db_filename << " for writing.\n";
+        return;
+    }
+
     out << "HEADER|"; 
     for (size_t i = 0; i < tree.getHeaders().size(); ++i) {
         out << tree.getHeaders()[i] << (i < tree.getHeaders().size() - 1 ? "," : "");
     }
     out << "\n";
-
-    if (!out.is_open()) {
-        std::cerr << "Error: Could not open " << db_filename << " for writing.\n";
-        return;
-    }
 
     LeafNode* current_leaf = tree.getFirstLeaf();
     int record_count = 0;
