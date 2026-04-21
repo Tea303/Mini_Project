@@ -82,7 +82,8 @@ bool CSVParser::validateAndParse(const std::string& filename, const std::string&
 
         std::vector<std::string> record = parseLine(line);
 
-        if (record.size() != expected_cols) {
+        // Before: if (record.size() != expected_cols) {
+        if (record.size() != static_cast<size_t>(expected_cols)) {
             std::cerr << "Warning: Anomalous formatting at row " << row_number 
                       << ". Expected " << expected_cols << " columns, found " << record.size() 
                       << ". Skipping row.\n";

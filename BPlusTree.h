@@ -145,8 +145,7 @@ public:
             pChildren.insert(pChildren.begin() + j + 1, rightNode);
 
             // If the parent absorbs the key successfully without exceeding capacity, propagation halts
-            if (pKeys.size() <= max_capacity) break;
-
+            if (pKeys.size() <= static_cast<size_t>(max_capacity)) break;
             // --- Trigger Internal Node Bifurcation ---
             InternalNode* newInternal = new InternalNode(max_capacity);
             int pSplitIndex = pKeys.size() / 2;
