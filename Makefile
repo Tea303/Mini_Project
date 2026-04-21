@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall
+CXXFLAGS = -std=c++17 -Wall -g
 
 TARGET = query_engine
 SRCS = main.cpp CSVParser.cpp StorageManager.cpp
