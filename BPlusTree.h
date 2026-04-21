@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <string>
 
 class BPlusTree {
 private:
@@ -43,7 +44,7 @@ public:
 
     // Search traversal
     std::vector<std::string> find(const std::string& key) {
-        std::vector<Node*> dummy_path; // Path is not needed for a pure read
+        std::vector<Node*> dummy_path; 
         LeafNode* leaf = findLeaf(key, dummy_path);
         if (!leaf) return {}; 
 
@@ -52,18 +53,24 @@ public:
 
         for (int i = 0; i < keys.size(); i++) {
             if (keys[i] == key) {
-                return {values[i]}; // Returns the record 
+                return {values[i]}; // Returns the fully consolidated record 
             }
         }
         return {}; 
     }
 
-    // Insert with iterative upward node splitting
+    // Insert with iterative upward node splitting and full record consolidation
     void insert(const std::string& key, const std::vector<std::string>& record) {
+        // Concatenate the entire record vector into a single string to prevent truncation
+        std::string full_record = record[0];
+        for (size_t j = 1; j < record.size(); ++j) {
+            full_record += "," + record[j];
+        }
+
         if (!root) {
             root = new LeafNode(max_capacity);
             static_cast<LeafNode*>(root)->getKeys().push_back(key);
-            static_cast<LeafNode*>(root)->getValues().push_back(record[0]); 
+            static_cast<LeafNode*>(root)->getValues().push_back(full_record); 
             return;
         }
 
@@ -77,7 +84,7 @@ public:
         while (i < keys.size() && key > keys[i]) i++;
         
         keys.insert(keys.begin() + i, key);
-        values.insert(values.begin() + i, record[0]);
+        values.insert(values.begin() + i, full_record); // Insert the consolidated string
 
         // If the leaf is within its cardinality limits, we are done
         if (keys.size() <= max_capacity) return;
