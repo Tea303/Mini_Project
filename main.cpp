@@ -86,31 +86,43 @@ int main() {
         }
         else if (command == "FIND") {
             std::string csv_name, key_value;
-            // First, extract the dataset name (one word)
-            if (ss >> csv_name) {
-                // Then, capture the rest of the line as the search key (supports spaces)
-                std::getline(ss >> std::ws, key_value);
-
-                if (key_value.empty()) {
-                    std::cerr << "Usage Error: FIND <csv_name> <key_value>\n";
-                    continue;
-                }
-
-                try {
-                    BPlusTree* tree = StorageManager::loadIndex(csv_name, 4);
-                    std::vector<std::string> result = tree->find(key_value);
-                    
-                    if (result.empty()) {
-                        std::cout << "Error: Key '" << key_value << "' not found.\n";
-                    } else {
-                        // ... (keep your structured table display logic here) ...
-                    }
-                    delete tree; 
-                } catch (const std::exception& e) {
-                    std::cerr << "Error: " << e.what() << "\n";
-                }
+            
+            // 1. Get the dataset name (e.g., "amazon")
+            if (!(ss >> csv_name)) {
+                std::cerr << "Usage Error: FIND <csv_name> <key_value>\n";
+                continue;
             }
-        } 
+
+            // 2. Capture EVERYTHING else on the line as the key
+            std::getline(ss >> std::ws, key_value);
+
+            // 3. Clean up the key (remove any trailing \r or \n)
+            if (!key_value.empty()) {
+                size_t last = key_value.find_last_not_of(" \n\r\t");
+                if (last != std::string::npos) key_value = key_value.substr(0, last + 1);
+            }
+
+            if (key_value.empty()) {
+                std::cerr << "Usage Error: Missing key value.\n";
+                continue;
+            }
+
+            try {
+                // Use csv_name directly. If you typed "amazon.csv", 
+                // formatFilename handles stripping the ".csv"
+                BPlusTree* tree = StorageManager::loadIndex(csv_name, 4);
+                std::vector<std::string> result = tree->find(key_value);
+                
+                if (result.empty()) {
+                    std::cout << "Error: Key [" << key_value << "] not found.\n";
+                } else {
+                    // ... (Your table display logic) ...
+                }
+                delete tree;
+            } catch (const std::exception& e) {
+                std::cerr << "Engine Error: " << e.what() << "\n";
+            }
+        }
         else {
             std::cerr << "Unrecognized command. Type HELP for syntax.\n";
         }
