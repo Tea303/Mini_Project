@@ -67,6 +67,7 @@ BPlusTree* StorageManager::loadIndex(const std::string& dataset_name, int capaci
             std::string key = line.substr(0, delim_pos);
             std::string record = line.substr(delim_pos + 1);
             
+            // Pass the raw tab-separated string as a single element
             tree->insert(key, {record}); 
         }
     }

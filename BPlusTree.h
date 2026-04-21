@@ -68,9 +68,9 @@ public:
         // Concatenate the entire record vector into a single string to prevent truncation
         std::string full_record = "";
         for (size_t j = 0; j < record.size(); ++j) {
-        full_record += record[j];
+            full_record += record[j];
             if (j < record.size() - 1) {
-                full_record += ","; // Maintain CSV formatting
+                full_record += "\t";
             }
         }
 
