@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <iomanip>
 
 void CSVParser::peek(const std::string& filename) {
     std::ifstream file(filename);
@@ -15,10 +16,22 @@ void CSVParser::peek(const std::string& filename) {
         std::vector<std::string> col_names = parseLine(header);
         std::vector<std::string> values = parseLine(first_row);
 
-        for (size_t i = 0; i < col_names.size(); ++i) {
-            std::cout << "Col " << i << "  " << col_names[i] 
-                      << "          " << (i < values.size() ? values[i] : "[MISSING]") << "\n";
+        // Determine the actual number of fields to display to avoid trailing data issues
+        size_t display_count = std::max(col_names.size(), values.size());
+
+        std::cout << "\n--- Dataset Structure Peek ---\n";
+        for (size_t i = 0; i < display_count; ++i) {
+            // Get the header name or a placeholder if missing
+            std::string header_name = (i < col_names.size()) ? col_names[i] : "Unknown";
+            // Get the sample value or [EMPTY] if missing
+            std::string sample_val = (i < values.size()) ? values[i] : "[EMPTY]";
+
+            // Format with clear spacing and no "Col" prefix
+            std::cout << std::left << std::setw(3) << i << " " 
+                      << std::left << std::setw(20) << header_name 
+                      << " : " << sample_val << "\n";
         }
+        std::cout << "------------------------------\n\n";
     }
 }
 
