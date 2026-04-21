@@ -1,0 +1,9 @@
+id,name,dept
+E001,Alice,Engineering
+E002,Bob,Sales
+E003,Carol,Engineering
+E004,David,Marketing
+E002,Eve,HumanResources
+E005,Frank,Sales
+E004,Grace,Finance
+E006,Henry,Operations
