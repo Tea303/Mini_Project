@@ -33,9 +33,9 @@ public:
         return keys.size(); 
     }
     
-    const std::vector<std::string>& getKeys() const { 
-        return keys; 
-    }
+    std::vector<std::string>& getKeys() { return keys; }
+    const std::vector<std::string>& getKeys() const { return keys; }
+    
 };
 
 /**
@@ -54,10 +54,9 @@ public:
     ~LeafNode() override = default;
 
     // Accessors
-    const std::vector<std::string>& getValues() const { 
-        return values; 
-    }
-    
+    std::vector<std::string>& getValues() { return values; }
+    const std::vector<std::string>& getValues() const { return values; }    
+
     LeafNode* getNextLeaf() const { 
         return next_leaf; 
     }
@@ -83,9 +82,8 @@ public:
     ~InternalNode() override = default;
 
     // Accessors
-    const std::vector<Node*>& getChildren() const { 
-        return children; 
-    }
+    std::vector<Node*>& getChildren() { return children; }
+    const std::vector<Node*>& getChildren() const { return children; }
 
     // Mutators
     // Note: Foundational setup. Advanced insertion logic (splitting) will manage these later.

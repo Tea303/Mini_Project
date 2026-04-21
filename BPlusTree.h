@@ -1,3 +1,6 @@
+#ifndef BPLUS_TREE_H
+#define BPLUS_TREE_H
+
 #include "BPlusTreeNodes.h" 
 #include <iostream>
 #include <algorithm>
@@ -20,7 +23,7 @@ private:
             const auto& keys = internal->getKeys();
             const auto& children = internal->getChildren();
             
-            int i = 0;
+            size_t i = 0;
             while (i < keys.size() && key >= keys[i]) {
                 i++;
             }
@@ -51,9 +54,9 @@ public:
         const auto& keys = leaf->getKeys();
         const auto& values = leaf->getValues();
 
-        for (int i = 0; i < keys.size(); i++) {
+        for (size_t i = 0; i < keys.size(); i++) {
             if (keys[i] == key) {
-                return {values[i]}; // Returns the fully consolidated record 
+                return {values[i]}; 
             }
         }
         return {}; 
@@ -62,9 +65,12 @@ public:
     // Insert with iterative upward node splitting and full record consolidation
     void insert(const std::string& key, const std::vector<std::string>& record) {
         // Concatenate the entire record vector into a single string to prevent truncation
-        std::string full_record = record[0];
-        for (size_t j = 1; j < record.size(); ++j) {
-            full_record += "," + record[j];
+        std::string full_record = "";
+        for (size_t j = 0; j < record.size(); ++j) {
+        full_record += record[j];
+            if (j < record.size() - 1) {
+                full_record += ","; // Maintain CSV formatting
+            }
         }
 
         if (!root) {
@@ -87,8 +93,7 @@ public:
         values.insert(values.begin() + i, full_record); // Insert the consolidated string
 
         // If the leaf is within its cardinality limits, we are done
-        if (keys.size() <= max_capacity) return;
-
+        if (keys.size() <= static_cast<size_t>(max_capacity)) return;
         // --- Trigger Leaf Node Bifurcation ---
         LeafNode* newLeaf = new LeafNode(max_capacity);
         int splitIndex = keys.size() / 2;
@@ -165,3 +170,5 @@ public:
         }
     }
 };
+
+#endif // BPLUS_TREE_H
