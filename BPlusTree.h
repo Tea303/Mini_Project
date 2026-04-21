@@ -86,14 +86,14 @@ public:
         auto& values = leaf->getValues();
 
         // Insert into sorted position
-        int i = 0;
-        while (i < keys.size() && key > keys[i]) i++;
+        size_t i = 0; // Changed from int to size_t
+        while (i < keys.size() && key > keys[i]) i++;;
         
         keys.insert(keys.begin() + i, key);
         values.insert(values.begin() + i, full_record); // Insert the consolidated string
 
         // If the leaf is within its cardinality limits, we are done
-        if (keys.size() <= static_cast<size_t>(max_capacity)) return;
+        if (keys.size() <= static_cast<size_t>(max_capacity)) return; // Explicit cast
         // --- Trigger Leaf Node Bifurcation ---
         LeafNode* newLeaf = new LeafNode(max_capacity);
         int splitIndex = keys.size() / 2;
@@ -138,7 +138,7 @@ public:
             auto& pChildren = parent->getChildren();
 
             // Insert the propagated key and right child into the parent
-            int j = 0;
+            size_t j = 0; // Changed from int to size_t
             while (j < pKeys.size() && splitKey > pKeys[j]) j++;
 
             pKeys.insert(pKeys.begin() + j, splitKey);
